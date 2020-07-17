@@ -1,5 +1,5 @@
 from typing import List, Dict
-import mysql.connector
+from mysql import connector
 import simplejson as json
 from flask import Flask, Response
 from flask import render_template
@@ -15,10 +15,10 @@ def cities_import() -> List[Dict]:
         'port': '3306',
         'database': 'citiesData'
     }
-    connection = mysql.connector.connect(**config)
+    connection = connector.connect(**config)
     cursor = connection.cursor(dictionary=True)
 
-    cursor.execute('SELECT * FROM tblCitiesImport ORDER BY fldCountry, FldName')
+    cursor.execute('SELECT * FROM tblCitiesImport ORDER BY fldCountry, fldName')
     result = cursor.fetchall()
 
     cursor.close()
@@ -28,17 +28,18 @@ def cities_import() -> List[Dict]:
 
 
 @app.route('/')
-def index() -> str:
-    js = json.dumps(cities_import())
-    resp = Response(js, status=200, mimetype='application/json')
-    return resp
-
-@app.route('/')
 def index():
     user = {'username': 'Monica'}
     cities_data = cities_import()
-    return render_template('index.html', title='Home', user = user, cities = cities_data)
 
+    return render_template('index.html', title='Home', user=user, cities=cities_data)
+
+
+@app.route('/api/cities')
+def cities() -> str:
+    js = json.dumps(cities_import())
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
 
 
 if __name__ == '__main__':
